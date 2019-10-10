@@ -289,9 +289,8 @@ def main():
             prefix = ''
             matrix_entries.append(environment.to_matrix_entry())
 
-        entry = environment.to_matrix_entry()
-
-        print('{prefix:<5} {entry}'.format(prefix=prefix, entry=entry))
+        # entry = environment.to_matrix_entry()
+        # print('{prefix:<5} {entry}'.format(prefix=prefix, entry=entry))
 
         matrix_entries
 
