@@ -19,14 +19,14 @@ stages:
         displayName: Generate Test Matrix
         steps:
           - bash: |
-              python ci/matrix.py ${{ matrix_platform_options }} ${{ parameters.matrix_options }}
+              python ci/matrix.py ${{ parameters.matrix_platform_options }} ${{ parameters.matrix_options }}
             name: generate_test_matrix
 
       - job: generate_build_matrix
         displayName: Generate Build Matrix
         steps:
           - bash: |
-              python ci/matrix.py ${{ matrix_platform_options }} --interpreter cpython --version 3.7 --architecture x86_64
+              python ci/matrix.py ${{ parameters.matrix_platform_options }} --interpreter cpython --version 3.7 --architecture x86_64
             name: generate_build_matrix
 
       - job: sdist
