@@ -25,7 +25,7 @@ stages:
         displayName: Generate Build Matrix
         steps:
           - bash: |
-              python ci/matrix.py --windows linux --windows macos --platform windows --interpreter cpython --version 3.7 --architecture x86_64
+              python ci/matrix.py --platform linux --platform macos --platform windows --interpreter cpython --version 3.7 --architecture x86_64
             name: generate_build_matrix
 
       - job: sdist
