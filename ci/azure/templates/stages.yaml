@@ -3,6 +3,7 @@ parameters:
   enable_publish: false
   matrix_platform_options: --platform linux --platform macos
   matrix_options: --interpreter cpython --version 3.6 --version 3.7 --architecture x86_64
+  parallel_job_limit: 0
 
 
 stages:
@@ -53,7 +54,7 @@ stages:
         pool:
           vmImage: $[ variables.vmImage ]
         strategy:
-          maxParallel: 4
+          maxParallel: ${{ parameters.parallel_job_limit }}
           matrix: $[ dependencies.generate_build_matrix.outputs['generate_build_matrix.JobsToRun'] ]
         steps:
           - task: UsePythonVersion@0
@@ -79,7 +80,7 @@ stages:
         pool:
           vmImage: $[ variables.vmImage ]
         strategy:
-          maxParallel: 4
+          maxParallel: ${{ parameters.parallel_job_limit }}
           matrix: $[ dependencies.generate_test_matrix.outputs['generate_test_matrix.JobsToRun'] ]
         steps:
           - task: UsePythonVersion@0
