@@ -2,4 +2,5 @@ stages:
   - template: ci/azure/templates/stages.yaml
     parameters:
       name: hello
-      matrix_options: --platform linux --platform macos --interpreter cpython --version 3.6 --version 3.7 --architecture x86_64
+      matrix_platform_options: --platform linux --platform macos
+      matrix_options: --interpreter cpython --version 3.6 --version 3.7 --architecture x86_64
