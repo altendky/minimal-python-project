@@ -221,6 +221,10 @@ def build_environments(
     ]
 
 
+def lower(x):
+    return [y.lower() for y in x]
+
+
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -232,16 +236,68 @@ def main():
         for environment in build_all_environments()
     ]
 
+    # parser.add_argument(
+    #     '--environments',
+    #     default=string_from_environments(test_environments),
+    # )
+
     parser.add_argument(
-        '--environments',
-        default=string_from_environments(test_environments),
+        '--platform',
+        action='append',
+        choices=lower(all_platforms),
+        default=[],
+        dest='platforms',
+    )
+
+    parser.add_argument(
+        '--interpreter',
+        action='append',
+        choices=lower(all_interpreters),
+        default=[],
+        dest='interpreters',
+    )
+
+    parser.add_argument(
+        '--version',
+        action='append',
+        choices=lower(all_versions),
+        default=[],
+        dest='versions',
+    )
+
+    parser.add_argument(
+        '--architecture',
+        action='append',
+        choices=lower(architectures),
+        default=[],
+        dest='architectures'
     )
 
     args = parser.parse_args()
 
-    matrix_entries = build_environments_from_string(
-        environments=args.environments,
-    )
+    matrix_entries = []
+
+    for environment in build_all_environments():
+        if (
+                environment.platform.lower() not in args.platforms
+                or environment.interpreter.lower() not in args.interpreters
+                or environment.version.lower() not in args.versions
+                or environment.architecture.lower() not in args.architectures
+        ):
+            prefix = 'skip'
+        else:
+            prefix = ''
+            matrix_entries.append(environment.to_matrix_entry())
+
+        entry = environment.to_matrix_entry()
+
+        print('{prefix:<5} {entry}'.format(prefix=prefix, entry=entry))
+
+        matrix_entries
+
+    # matrix_entries = build_environments_from_string(
+    #     environments=args.environments,
+    # )
 
     json_matrix = json.dumps(matrix_entries)
 
