@@ -16,7 +16,7 @@ stages:
         displayName: Generate Test Matrix
         steps:
           - bash: |
-              python matrix.py
+              python ci/matrix.py
             name: generate_test_matrix
 
       - job: generate_build_matrix
