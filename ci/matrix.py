@@ -275,7 +275,7 @@ def main():
 
     args = parser.parse_args()
 
-    matrix_entries = []
+    environments = []
 
     for environment in build_all_environments():
         if (
@@ -287,16 +287,19 @@ def main():
             prefix = 'skip'
         else:
             prefix = ''
-            matrix_entries.append(environment.to_matrix_entry())
+            environments.append(environment)
 
-        # entry = environment.to_matrix_entry()
-        # print('{prefix:<5} {entry}'.format(prefix=prefix, entry=entry))
-
-        matrix_entries
+        entry = environment.to_matrix_entry()
+        print('{prefix:<5} {entry}'.format(prefix=prefix, entry=entry))
 
     # matrix_entries = build_environments_from_string(
     #     environments=args.environments,
     # )
+
+    matrix_entries = collections.OrderedDict(
+        environment.to_matrix_entry()
+        for environment in environments
+    )
 
     json_matrix = json.dumps(matrix_entries)
 
