@@ -1,12 +1,5 @@
-resources:
-  repositories:
-  - repository: aapp
-    type: github
-    name: altendky/azure-pipelines-python
-
-
 stages:
-  - template: templates/stages.yaml@aapp
+  - template: ci/azure/templates/stages.yaml
     parameters:
       name: hello
       operating_systems: linux macos

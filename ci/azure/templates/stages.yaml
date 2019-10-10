@@ -1,0 +1,132 @@
+parameters:
+  operating_systems: ''
+  name: ''
+
+stages:
+  - stage: Test_${{ parameters.name }}
+    # TODO: uncomment this to only build master and tags and PRs...  or something
+    #trigger:
+    #  branches:
+    #    include: ['master']
+    #  tags:
+    #    include: ['*']
+
+    jobs:
+      - job: generate_test_matrix
+        displayName: Generate Test Matrix
+        steps:
+          - bash: |
+              python matrix.py
+            name: generate_test_matrix
+
+      - job: generate_build_matrix
+        displayName: Generate Build Matrix
+        steps:
+          - bash: |
+              python ci/matrix.py --environment 'Linux-CPython-37-x86_64|macOS-CPython-37-x86_64|Windows-CPython-37-x86_64'
+            name: generate_build_matrix
+
+      - job: sdist
+        displayName: Build sdist
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: 3.7
+              architecture: x64
+          - bash: |
+              python setup.py sdist --formats zip
+            displayName: Build sdist
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(System.DefaultWorkingDirectory)/dist/'
+              artifactName: dist
+
+      - job: wheels
+        displayName: Build Wheels
+        dependsOn:
+          - generate_build_matrix
+        pool:
+          vmImage: $[ variables.vmImage ]
+        strategy:
+          maxParallel: 4
+          matrix: $[ dependencies.generate_build_matrix.outputs['generate_build_matrix.JobsToRun'] ]
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: 3.7
+              architecture: x64
+          - bash: |
+              python -m pip install cibuildwheel
+              python -m cibuildwheel --output-dir dist
+            displayName: Build Wheel
+            env:
+              CIBW_SKIP: cp27-* cp34-*
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(System.DefaultWorkingDirectory)/dist/'
+              artifactName: dist
+
+      - job: test
+        displayName: Test
+        dependsOn:
+          - generate_test_matrix
+          - wheels
+        pool:
+          vmImage: $[ variables.vmImage ]
+        strategy:
+          maxParallel: 4
+          matrix: $[ dependencies.generate_test_matrix.outputs['generate_test_matrix.JobsToRun'] ]
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(versionSpec)
+              architecture: $(architecture)
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: 'dist'
+              downloadPath: $(System.DefaultWorkingDirectory)
+          - bash: |
+              python -c 'import sys; print(sys.version); print(sys.platform)'
+            displayName: Report Python version
+          - bash: |
+              python -m pip install tox tox-run-command
+            displayName: Install tox
+          - bash: |
+              python -m pip download --only-binary --no-index --find-links dist/ --no-deps --dest dist2/ ${{ parameters.name }}
+              python -m tox --run-command 'pip install pytest-azurepipelines'
+              python -m tox --installpkg dist2/*.whl
+            displayName: tox
+            env:
+              TOXENV: $[ variables.TOXENV ]
+    #      - bash: |
+    #          python -m tox -e codecov
+    #        displayName: codecov
+    #        env:
+    #          CODECOV_TOKEN: $(CODECOV_TOKEN)
+
+    #  - job: publish
+    #    displayName: Publish
+    #    dependsOn: test
+    #    pool:
+    #      vmImage: 'ubuntu-16.04'
+    #    steps:
+    #      - task: UsePythonVersion@0
+    #        inputs:
+    #          versionSpec: 3.7
+    #          architecture: x64
+    #      - task: DownloadBuildArtifacts@0
+    #        inputs:
+    #          artifactName: 'dist'
+    #          downloadPath: $(System.DefaultWorkingDirectory)
+    #      - bash: |
+    #          python -m venv venv
+    #          venv/bin/pip install twine
+    #        displayName: Build venv
+    #      - bash: |
+    #          venv/bin/python ci/twineontag.py
+    #        env:
+    #          TWINE_USERNAME: $(TWINE_USERNAME)
+    #          TWINE_PASSWORD: $(TWINE_PASSWORD)
+    #        displayName: Twine On Tag
