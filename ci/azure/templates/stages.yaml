@@ -3,7 +3,7 @@ parameters:
   name: ''
 
 stages:
-  - stage: Test_${{ parameters.name }}
+  - stage: ${{ parameters.name }}
     # TODO: uncomment this to only build master and tags and PRs...  or something
     #trigger:
     #  branches:
